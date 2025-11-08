@@ -80,7 +80,7 @@ int CKKSPolynomialSet(CKKSPolynomial *poly, const uint64_t *coeffs, size_t count
  * @param result 存储结果的多项式
  * @return 成功返回0，失败返回-1
  */
- int CKKSPolynomialAdd(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
+ int CKKSAdd(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
 
 /**
  * @brief 多项式减法
@@ -96,7 +96,7 @@ int CKKSPolynomialSet(CKKSPolynomial *poly, const uint64_t *coeffs, size_t count
 int CKKSPolynomialAddInplace(CKKSPolynomial *accumulator, const CKKSPolynomial *summand);
 
 
- int CKKSPolynomialSub(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
+ int  CKKSSub(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
 
 /**
  * @brief 多项式乘法（使用NTT加速）

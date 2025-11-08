@@ -83,7 +83,7 @@ void CKKSPolynomialFree(CKKSPolynomial *poly)
  * 多项式加法
  * 对应系数相加并模约简
  */
- int CKKSPolynomialAdd(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result)
+ int CKKSAdd(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result)
 {
     if (a == NULL || b == NULL || result == NULL) {
         return -1;  // 空指针检查
@@ -105,7 +105,7 @@ void CKKSPolynomialFree(CKKSPolynomial *poly)
  * 多项式减法
  * 对应系数相减并模约简
  */
- int CKKSPolynomialSub(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result)
+ int  CKKSSub(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result)
 {
     if (a == NULL || b == NULL || result == NULL) {
         return -1;  // 空指针检查
@@ -516,6 +516,5 @@ void CKKSPolynomialPrint(const CKKSPolynomial *poly, const char *label, size_t l
         printf("  coeff[%zu] = %lld\n", i, (long long)poly->coeffs[i]);
     }
 }
-
 
 

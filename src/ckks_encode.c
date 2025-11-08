@@ -154,4 +154,3 @@ void CKKSComplexSlotsToFloats(const CKKSComplex *slots, size_t slotCount, double
     free(decodedSlots);
 }
 
-

@@ -10,7 +10,7 @@
 
 int test_polynomial(){
 
- const size_t degree =4098; /* Dimension of the cyclotomic polynomial x^1024 + 1 */
+ const size_t degree =1024; /* Dimension of the cyclotomic polynomial x^1024 + 1 */
     const uint64_t modulus = 65537; /* 16-bit Fermat prime used for the demo */
 
     CKKSPolynomial a;
@@ -55,12 +55,12 @@ int test_polynomial(){
     }
 
     /* Addition */
-    assert(CKKSPolynomialAdd(&a, &b, &result) == 0);
+    assert(CKKSAdd(&a, &b, &result) == 0);
     assert(CKKSMatchCoefficients(&result, expectedAdd) == 1);
     printf("CKKS polynomial addition passed for degree %zu.\n", degree);
 
     /* Subtraction */
-    assert(CKKSPolynomialSub(&a, &b, &result) == 0);
+    assert(CKKSSub(&a, &b, &result) == 0);
     assert(CKKSMatchCoefficients(&result, expectedSub) == 1);
     printf("CKKS polynomial subtraction passed for degree %zu.\n", degree);
 
@@ -147,7 +147,7 @@ int test_polynomial(){
     printf("✅ CKKS float-to-polynomial round-trip passed for %zu inputs.\n", plaintextCount);
 
     printf("\n=== CKKS conversion sanity sample ===\n");
-    const double conversionDemo[] = {0.5, -1.25, 2.75, -3.5, 4.0};
+    const double conversionDemo[] = {0.5, -1.25, 2.75, -3.5, 4.0, -0.875, 1.625, -2};
     const size_t conversionDemoCount = sizeof(conversionDemo) / sizeof(conversionDemo[0]);
     const double conversionTolerance = 5e-3;
 
@@ -308,10 +308,9 @@ int test_polynomial(){
 int test_ckks_crypto(void)
 {
 
- const size_t degree = 1024;
+   const size_t degree =1024;
     const uint64_t modulus = 65537;
-    const double scalingFactor = 4096.0;
-
+    const double scalingFactor = 128.0;
     CKKSPrng prng;
     CKKSPrngInit(&prng, 42ULL);
 
@@ -435,9 +434,305 @@ int test_ckks_crypto(void)
 
 }
 
+int test_add_mul()
+{
+    const size_t degree = 64;
+    const uint64_t modulus = 65537;
+    const double scalingFactor = 64.0;
+
+
+    CKKSPrng prng;
+    CKKSPrngInit(&prng, 42ULL);
+
+    CKKSKeyPair keyPair;
+    if (CKKSKeyPairInit(&keyPair, degree, modulus) != 0) {
+        fprintf(stderr, "Failed to initialize key pair.\n");
+        return 1;
+    }
+
+    if (CKKSKeyGen(&keyPair, &prng) != 0) {
+        fprintf(stderr, "Key generation failed.\n");
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    printf("CKKS key generation completed for degree %zu.\n", degree);
+
+    const double plaintextValuesA[] = {1.125, -0.75, 3.5, 0.25, -1.0, 2.75, -3.125, 0.875};
+    const double plaintextValuesB[] = {0.5, 1.25, -2.0, 0.75, -1.5, 1.875, 2.25, -0.625};
+    const size_t plaintextCount = sizeof(plaintextValuesA) / sizeof(plaintextValuesA[0]);
+
+    CKKSPolynomial plaintextA = {0};
+    CKKSPolynomial plaintextB = {0};
+    if (CKKSPolynomialInit(&plaintextA, degree, modulus) != 0 ||
+        CKKSPolynomialInit(&plaintextB, degree, modulus) != 0) {
+        fprintf(stderr, "Failed to initialize plaintext polynomials.\n");
+        CKKSPolynomialFree(&plaintextA);
+        CKKSPolynomialFree(&plaintextB);
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    CKKSEncodeFloatsToPolynomial(plaintextValuesA, plaintextCount, degree, scalingFactor, modulus,
+                                 plaintextA.coeffs);
+    CKKSEncodeFloatsToPolynomial(plaintextValuesB, plaintextCount, degree, scalingFactor, modulus,
+                                 plaintextB.coeffs);
+
+    printf("Plaintext polynomial A (first 8 coefficients):\n");
+    CKKSPolynomialPrint(&plaintextA, "mA", 8);
+    printf("Plaintext polynomial B (first 8 coefficients):\n");
+    CKKSPolynomialPrint(&plaintextB, "mB", 8);
+
+    CKKSCiphertext ciphertextA = {0};
+    CKKSCiphertext ciphertextB = {0};
+    if (CKKSCiphertextInit(&ciphertextA, degree, modulus) != 0 ||
+        CKKSCiphertextInit(&ciphertextB, degree, modulus) != 0) {
+        fprintf(stderr, "Failed to initialize ciphertexts.\n");
+        CKKSCiphertextFree(&ciphertextA);
+        CKKSCiphertextFree(&ciphertextB);
+        CKKSPolynomialFree(&plaintextA);
+        CKKSPolynomialFree(&plaintextB);
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    if (CKKSEncrypt(&keyPair, &plaintextA, &prng, &ciphertextA) != 0 ||
+        CKKSEncrypt(&keyPair, &plaintextB, &prng, &ciphertextB) != 0) {
+        fprintf(stderr, "Encryption failed.\n");
+        CKKSCiphertextFree(&ciphertextA);
+        CKKSCiphertextFree(&ciphertextB);
+        CKKSPolynomialFree(&plaintextA);
+        CKKSPolynomialFree(&plaintextB);
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    printf("Ciphertext A polynomials (first 8 coefficients each):\n");
+    CKKSPolynomialPrint(&ciphertextA.c0, "c0A", 8);
+    CKKSPolynomialPrint(&ciphertextA.c1, "c1A", 8);
+    printf("Ciphertext B polynomials (first 8 coefficients each):\n");
+    CKKSPolynomialPrint(&ciphertextB.c0, "c0B", 8);
+    CKKSPolynomialPrint(&ciphertextB.c1, "c1B", 8);
+
+    CKKSPolynomial decryptedA = {0};
+    CKKSPolynomial decryptedB = {0};
+    if (CKKSPolynomialInit(&decryptedA, degree, modulus) != 0 ||
+        CKKSPolynomialInit(&decryptedB, degree, modulus) != 0) {
+        fprintf(stderr, "Failed to initialize decrypted buffers.\n");
+        CKKSPolynomialFree(&decryptedA);
+        CKKSPolynomialFree(&decryptedB);
+        CKKSCiphertextFree(&ciphertextA);
+        CKKSCiphertextFree(&ciphertextB);
+        CKKSPolynomialFree(&plaintextA);
+        CKKSPolynomialFree(&plaintextB);
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    if (CKKSDecrypt(&keyPair, &ciphertextA, &decryptedA) != 0 ||
+        CKKSDecrypt(&keyPair, &ciphertextB, &decryptedB) != 0) {
+        fprintf(stderr, "Decryption failed.\n");
+        CKKSPolynomialFree(&decryptedA);
+        CKKSPolynomialFree(&decryptedB);
+        CKKSCiphertextFree(&ciphertextA);
+        CKKSCiphertextFree(&ciphertextB);
+        CKKSPolynomialFree(&plaintextA);
+        CKKSPolynomialFree(&plaintextB);
+        CKKSKeyPairFree(&keyPair);
+        return 1;
+    }
+
+    printf("Decrypted polynomial A (first 8 coefficients):\n");
+    CKKSPolynomialPrint(&decryptedA, "mA'", 8);
+    printf("Decrypted polynomial B (first 8 coefficients):\n");
+    CKKSPolynomialPrint(&decryptedB, "mB'", 8);
+
+    int64_t diffA = CKKSMaxCenteredDifference(&plaintextA, &decryptedA);
+    int64_t diffB = CKKSMaxCenteredDifference(&plaintextB, &decryptedB);
+    printf("Maximum centered coefficient delta after decrypt (A): %lld\n", (long long)diffA);
+    printf("Maximum centered coefficient delta after decrypt (B): %lld\n", (long long)diffB);
+
+    double recoveredA[plaintextCount];
+    double recoveredB[plaintextCount];
+    CKKSDecodePolynomialToFloats(decryptedA.coeffs, decryptedA.degree, scalingFactor, decryptedA.modulus,
+                                 recoveredA, plaintextCount);
+    CKKSDecodePolynomialToFloats(decryptedB.coeffs, decryptedB.degree, scalingFactor, decryptedB.modulus,
+                                 recoveredB, plaintextCount);
+
+    double maxErrorA = 0.0;
+    double maxErrorB = 0.0;
+    for (size_t i = 0; i < plaintextCount; ++i) {
+        double diff = fabs(recoveredA[i] - plaintextValuesA[i]);
+        if (diff > maxErrorA) {
+            maxErrorA = diff;
+        }
+        diff = fabs(recoveredB[i] - plaintextValuesB[i]);
+        if (diff > maxErrorB) {
+            maxErrorB = diff;
+        }
+        printf("Slot %zu -> A original %.6f, recovered %.6f | B original %.6f, recovered %.6f\n", i,
+               plaintextValuesA[i], recoveredA[i], plaintextValuesB[i], recoveredB[i]);
+    }
+    printf("Maximum decoding error after encrypt/decrypt (A): %.10f\n", maxErrorA);
+    printf("Maximum decoding error after encrypt/decrypt (B): %.10f\n", maxErrorB);
+
+    int overallSuccess = 1;
+    overallSuccess &= (llabs(diffA) <= 80 && maxErrorA <= 3.5e-1);
+    overallSuccess &= (llabs(diffB) <= 80 && maxErrorB <= 3.5e-1);
+
+    CKKSPolynomial expectedAdd = {0};
+    CKKSPolynomial expectedSub = {0};
+    CKKSPolynomial expectedMul = {0};
+    if (CKKSPolynomialInit(&expectedAdd, degree, modulus) != 0 ||
+        CKKSPolynomialInit(&expectedSub, degree, modulus) != 0 ||
+        CKKSPolynomialInit(&expectedMul, degree, modulus) != 0) {
+        fprintf(stderr, "Failed to initialize expected result polynomials.\n");
+        CKKSPolynomialFree(&expectedAdd);
+        CKKSPolynomialFree(&expectedSub);
+        CKKSPolynomialFree(&expectedMul);
+        overallSuccess = 0;
+    }
+
+    if (overallSuccess &&
+        (CKKSAdd(&plaintextA, &plaintextB, &expectedAdd) != 0 ||
+         CKKSSub(&plaintextA, &plaintextB, &expectedSub) != 0)) {
+        fprintf(stderr, "Failed to build plaintext reference results.\n");
+        overallSuccess = 0;
+    }
+
+    double expectedMulPlain[plaintextCount];
+    if (overallSuccess) {
+        for (size_t i = 0; i < plaintextCount; ++i) {
+            expectedMulPlain[i] = plaintextValuesA[i] * plaintextValuesB[i];
+        }
+        CKKSEncodeFloatsToPolynomial(expectedMulPlain, plaintextCount, degree, scalingFactor * scalingFactor,
+                                     modulus, expectedMul.coeffs);
+    }
+
+    CKKSCiphertext cipherAdd = {0};
+    CKKSCiphertext cipherSub = {0};
+    CKKSCiphertext cipherMul = {0};
+    if (overallSuccess &&
+        (CKKSCiphertextInit(&cipherAdd, degree, modulus) != 0 ||
+         CKKSCiphertextInit(&cipherSub, degree, modulus) != 0 ||
+         CKKSCiphertextInit(&cipherMul, degree, modulus) != 0)) {
+        fprintf(stderr, "Failed to initialize ciphertext evaluation buffers.\n");
+        overallSuccess = 0;
+    }
+
+    CKKSPolynomial decryptedAdd = {0};
+    CKKSPolynomial decryptedSub = {0};
+    CKKSPolynomial decryptedMul = {0};
+    if (overallSuccess &&
+        (CKKSPolynomialInit(&decryptedAdd, degree, modulus) != 0 ||
+         CKKSPolynomialInit(&decryptedSub, degree, modulus) != 0 ||
+         CKKSPolynomialInit(&decryptedMul, degree, modulus) != 0)) {
+        fprintf(stderr, "Failed to initialize decrypted evaluation buffers.\n");
+        overallSuccess = 0;
+    }
+
+    if (overallSuccess &&
+        (CKKSCiphertextAdd(&ciphertextA, &ciphertextB, &cipherAdd) != 0 ||
+         CKKSCiphertextSub(&ciphertextA, &ciphertextB, &cipherSub) != 0 ||
+         CKKSCiphertextMul(&keyPair, &ciphertextA, &ciphertextB, scalingFactor, &cipherMul) != 0)) {
+        fprintf(stderr, "Ciphertext evaluation failed.\n");
+        overallSuccess = 0;
+    }
+
+    if (overallSuccess &&
+        (CKKSDecrypt(&keyPair, &cipherAdd, &decryptedAdd) != 0 ||
+         CKKSDecrypt(&keyPair, &cipherSub, &decryptedSub) != 0 ||
+         CKKSDecrypt(&keyPair, &cipherMul, &decryptedMul) != 0)) {
+        fprintf(stderr, "Failed to decrypt evaluated ciphertexts.\n");
+        overallSuccess = 0;
+    }
+
+    if (overallSuccess) {
+        int64_t addDiff = CKKSMaxCenteredDifference(&expectedAdd, &decryptedAdd);
+        int64_t subDiff = CKKSMaxCenteredDifference(&expectedSub, &decryptedSub);
+        int64_t mulDiff = CKKSMaxCenteredDifference(&expectedMul, &decryptedMul);
+        printf("Ciphertext addition centered delta vs plaintext add: %lld\n", (long long)addDiff);
+        printf("Ciphertext subtraction centered delta vs plaintext sub: %lld\n", (long long)subDiff);
+        printf("Ciphertext multiplication centered delta vs plaintext mul: %lld\n", (long long)mulDiff);
+
+        double expectedAddFloats[plaintextCount];
+        double expectedSubFloats[plaintextCount];
+        CKKSDecodePolynomialToFloats(expectedAdd.coeffs, expectedAdd.degree, scalingFactor, expectedAdd.modulus,
+                                     expectedAddFloats, plaintextCount);
+        CKKSDecodePolynomialToFloats(expectedSub.coeffs, expectedSub.degree, scalingFactor, expectedSub.modulus,
+                                     expectedSubFloats, plaintextCount);
+
+        double recoveredAdd[plaintextCount];
+        double recoveredSub[plaintextCount];
+        double recoveredMul[plaintextCount];
+        CKKSDecodePolynomialToFloats(decryptedAdd.coeffs, decryptedAdd.degree, scalingFactor, decryptedAdd.modulus,
+                                     recoveredAdd, plaintextCount);
+        CKKSDecodePolynomialToFloats(decryptedSub.coeffs, decryptedSub.degree, scalingFactor, decryptedSub.modulus,
+                                     recoveredSub, plaintextCount);
+        CKKSDecodePolynomialToFloats(decryptedMul.coeffs, decryptedMul.degree, scalingFactor * scalingFactor,
+                                     decryptedMul.modulus, recoveredMul, plaintextCount);
+
+        double addError = 0.0;
+        double subError = 0.0;
+        double mulError = 0.0;
+        for (size_t i = 0; i < plaintextCount; ++i) {
+            double diff = fabs(recoveredAdd[i] - expectedAddFloats[i]);
+            if (diff > addError) {
+                addError = diff;
+            }
+            diff = fabs(recoveredSub[i] - expectedSubFloats[i]);
+            if (diff > subError) {
+                subError = diff;
+            }
+            diff = fabs(recoveredMul[i] - expectedMulPlain[i]);
+            if (diff > mulError) {
+                mulError = diff;
+            }
+            printf("Slot %zu -> add %.6f (expected %.6f), sub %.6f (expected %.6f), mul %.6f (expected %.6f)\n",
+                   i, recoveredAdd[i], expectedAddFloats[i], recoveredSub[i], expectedSubFloats[i], recoveredMul[i],
+                   expectedMulPlain[i]);
+        }
+
+        printf("Maximum decoding error (add): %.10f\n", addError);
+        printf("Maximum decoding error (sub): %.10f\n", subError);
+        printf("Maximum decoding error (mul): %.10f\n", mulError);
+
+        overallSuccess &= (llabs(addDiff) <= 96 && addError <= 1e-6);
+        overallSuccess &= (llabs(subDiff) <= 96 && subError <= 1e-6);
+        overallSuccess &= (llabs(mulDiff) <= (int64_t)(modulus / 2U) && mulError <= 1e-3);
+    }
+
+    if (overallSuccess) {
+        printf("✅ Ciphertext arithmetic (add/sub/mul) validated against plaintext references.\n");
+    } else {
+        fprintf(stderr, "⚠️  Ciphertext arithmetic validation failed.\n");
+    }
+
+    CKKSPolynomialFree(&decryptedAdd);
+    CKKSPolynomialFree(&decryptedSub);
+    CKKSPolynomialFree(&decryptedMul);
+    CKKSCiphertextFree(&cipherAdd);
+    CKKSCiphertextFree(&cipherSub);
+    CKKSCiphertextFree(&cipherMul);
+    CKKSPolynomialFree(&expectedAdd);
+    CKKSPolynomialFree(&expectedSub);
+    CKKSPolynomialFree(&expectedMul);
+
+    CKKSPolynomialFree(&decryptedA);
+    CKKSPolynomialFree(&decryptedB);
+    CKKSCiphertextFree(&ciphertextA);
+    CKKSCiphertextFree(&ciphertextB);
+    CKKSPolynomialFree(&plaintextA);
+    CKKSPolynomialFree(&plaintextB);
+    CKKSKeyPairFree(&keyPair);
+
+    return overallSuccess ? 0 : 1;
+}
+
 int main(void)
 {
   test_polynomial();
   test_ckks_crypto();
+  test_add_mul();
  return 0;
 }
