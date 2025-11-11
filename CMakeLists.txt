@@ -90,6 +90,22 @@ target_link_libraries(ckks_crypto ckks_polynomial ckks_encode)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+#本地openhitls构建的路径/usr/local
+include_directories(SYSTEM /usr/local/include)
+
+link_directories(/usr/local/lib)
+
+add_executable(test_main test/test_main.c)
+
+target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode m)
+
+
+target_link_libraries(test_main 
+    hitls_crypto
+    hitls_bsl
+    boundscheck
+)
+
 #代码现在依赖 hitls_crypto 和 hitls_bsl，要将这些库链接到测试程序中。
 
 # include_directories(/usr/local/include /usr/local/include/hitls /usr/local/include/hitls/bsl /usr/local/include/hitls/crypto /usr/local/include/hitls/pki /usr/local/include/hitls/tls)
