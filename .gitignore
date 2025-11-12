@@ -1,0 +1,107 @@
+# -------------------------------------------------------------------
+# 编译和构建产物 (Build Outputs)
+# -------------------------------------------------------------------
+
+# 通用构建目录 (通常是 Makefile 或 CMake 生成的)
+/build/
+/bin/
+/lib/
+/dist/
+/.cache/
+
+# 目标文件 (.o, .obj)
+*.o
+*.obj
+
+# 库文件 (.a, .lib, .so, .dll)
+*.a
+*.lib
+*.so
+*.dll
+*.lo
+*.la
+
+# 可执行文件 (Linux/macOS)
+*.exe
+*.out
+*.app
+
+# 依赖管理文件 (如 Make 或 CMake 自动生成)
+.dep
+*.d
+Makefile.local
+
+# -------------------------------------------------------------------
+# CMake 相关
+# -------------------------------------------------------------------
+
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+CTestTestfile.cmake
+
+# -------------------------------------------------------------------
+# Visual Studio / Windows 相关
+# -------------------------------------------------------------------
+
+# 解决方案文件和项目文件产生的用户特定文件
+*.suo
+*.user
+*.ncb
+*.aps
+*.pdb
+*.idb
+*.opensdf
+*.sdf
+*.tlog
+*.ipch
+
+# Visual Studio / Debug/Release 目录
+/Debug/
+/Release/
+/x64/
+/Win32/
+
+# -------------------------------------------------------------------
+# IDE/编辑器特定文件 (IDE/Editor Specific)
+# -------------------------------------------------------------------
+
+# VIM 备份文件
+*~
+*.swp
+*.swo
+
+# Emacs
+#*#
+.#*
+
+# VS Code
+.vscode/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# JetBrains IDEs (CLion, etc.)
+.idea/
+
+# macOS 特定文件
+.DS_Store
+
+# 临时文件
+*~
+
+# -------------------------------------------------------------------
+# 测试结果和日志 (Test Results and Logs)
+# -------------------------------------------------------------------
+
+# 性能测试结果
+benchmark_results/
+*.benchmark.txt
+
+# 测试日志
+*.log
+before*.txt
+after*.txt
