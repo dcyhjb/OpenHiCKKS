@@ -767,12 +767,12 @@ int test_add_mul()
 int main(void)
 {
     // 1. 注册内存管理函数
-    BSL_SAL_CallBack_Ctrl(BSL_SAL_MEM_MALLOC_CB_FUNC, malloc);
-    BSL_SAL_CallBack_Ctrl(BSL_SAL_MEM_FREE_CB_FUNC, free);
+    BSL_SAL_CallBack_Ctrl(BSL_SAL_MEM_MALLOC, malloc);
+    BSL_SAL_CallBack_Ctrl(BSL_SAL_MEM_FREE, free);
     
     // 2. 初始化 BSL 错误处理
     BSL_ERR_Init();
-    
+    const uint64_t ealInitFlags = CRYPT_EAL_INIT_CPU | CRYPT_EAL_INIT_PROVIDER;
     // 3. 初始化 EAL 密码学层
     if (CRYPT_EAL_Init(CRYPT_EAL_INIT_CPU | CRYPT_EAL_INIT_PROVIDER) != CRYPT_SUCCESS) {
         fprintf(stderr, "Failed to initialize OpenHiTLS EAL.\n");
@@ -782,7 +782,7 @@ int main(void)
     // 4. 初始化 EAL 随机数生成器
     if (CRYPT_EAL_ProviderRandInitCtx(NULL, CRYPT_RAND_SHA256, "provider=default", NULL, 0, NULL) != CRYPT_SUCCESS) {
         fprintf(stderr, "Failed to initialize OpenHiTLS PRNG.\n");
-        CRYPT_EAL_Deinit();
+        CRYPT_EAL_Cleanup(ealInitFlags);
         BSL_ERR_DeInit();
         return 1;
     }
@@ -791,7 +791,7 @@ int main(void)
     test_add_mul();
 
     CRYPT_EAL_RandDeinit(); // 清理随机数
-    CRYPT_EAL_Deinit();     // 清理 EAL
+    CRYPT_EAL_Cleanup(ealInitFlags);    // 清理 EAL
     BSL_ERR_DeInit();       // 清理 BSL
 
     return 0;

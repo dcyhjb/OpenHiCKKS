@@ -80,6 +80,13 @@ add_library(ckks_encode STATIC src/ckks_encode.c)
 add_library(ckks_polynomial STATIC src/ckks_polynomial.c)
 target_link_libraries(ckks_polynomial ckks_encode m)
 add_library(ckks_crypto STATIC src/ckks_crypto.c)
+# target_include_directories(ckks_crypto 
+#     PRIVATE 
+#     ${CMAKE_CURRENT_SOURCE_DIR}/include
+#     /usr/local/include
+#     /usr/local/include/hitls
+# )
+target_include_directories(ckks_crypto SYSTEM PUBLIC /usr/local/include /usr/local/include/hitls /usr/local/include/hitls/bsl /usr/local/include/hitls/crypto /usr/local/include/hitls/pki /usr/local/include/hitls/tls)
 target_link_libraries(ckks_crypto ckks_polynomial ckks_encode)
 
 
@@ -92,6 +99,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 #本地openhitls构建的路径/usr/local
 include_directories(SYSTEM /usr/local/include)
+# include_directories(SYSTEM /usr/local/include/hitls)
 
 link_directories(/usr/local/lib)
 
@@ -99,8 +107,18 @@ add_executable(test_main test/test_main.c)
 
 target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode m)
 
+# 性能基准测试程序 - 评估 CKKS 各项操作的性能指标
+add_executable(test_benchmark test/test_benchmark.c)
+target_link_libraries(test_benchmark ckks_crypto ckks_polynomial ckks_encode m)
+
 
 target_link_libraries(test_main 
+    hitls_crypto
+    hitls_bsl
+    boundscheck
+)
+
+target_link_libraries(test_benchmark 
     hitls_crypto
     hitls_bsl
     boundscheck
@@ -132,5 +150,5 @@ target_link_libraries(test_main
 
 
 # link_libraries(ckks)
-add_executable(test_main test/test_main.c) # 占位符目标，防止空项目错误
-target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode  m)
+# add_executable(test_main test/test_main.c) # 占位符目标，防止空项目错误
+# target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode  m)
