@@ -116,5 +116,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 
 # link_libraries(ckks)
-add_executable(test_main test/test_main.c) # 占位符目标，防止空项目错误
-target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode  m)
+
+# 功能验证测试程序 - 验证 CKKS 实现的正确性
+add_executable(test_main test/test_main.c)
+target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode m)
+
+# 性能基准测试程序 - 评估 CKKS 各项操作的性能指标
+add_executable(test_benchmark test/test_benchmark.c)
+target_link_libraries(test_benchmark ckks_crypto ckks_polynomial ckks_encode m)
