@@ -8,8 +8,8 @@
 #include "ckks_encode.h"  // Include the encode header
 #include "ckks_crypto.h"  // For CKKSKeyPair, CKKSCiphertext
 
-#include "crypto/crypt_eal_rand.h" // 引入 OpenHiTLS 随机数 EAL 接口
-#include "crypto/crypt_errno.h"    // 引入 OpenHiTLS 错误码
+#include "crypto/crypt_eal_rand.h"
+#include "crypto/crypt_errno.h"
 
 
 // void CKKSPrngInit(CKKSPrng *prng, uint64_t seed)
@@ -72,11 +72,11 @@
 // }
 
 /**
- * @brief 从 OpenHiTLS DRBG 获取安全随机字节
+ * @brief Get secure random bytes from OpenHiTLS DRBG
  */
 static int CKKSGetRandomBytes(uint8_t *buffer, size_t length)
 {
-    // 使用 OpenHiTLS 全局上下文的 DRBG
+    // Use OpenHiTLS global context DRBG
     int32_t ret = CRYPT_EAL_RandbytesEx(NULL, buffer, length);
     if (ret != CRYPT_SUCCESS) {
         return -1;
@@ -85,7 +85,7 @@ static int CKKSGetRandomBytes(uint8_t *buffer, size_t length)
 }
 
 /**
- * @brief 获取一个64位安全随机数
+ * @brief Get a 64-bit secure random number
  */
 static uint64_t CKKSGetRandomUint64(void)
 {
@@ -95,7 +95,7 @@ static uint64_t CKKSGetRandomUint64(void)
 }
 
 /**
- * @brief 生成 [0, modulus-1] 范围内的均匀随机数
+ * @brief Generate uniform random number in range [0, modulus-1]
  */
 static uint64_t CKKSGetUniformMod(uint64_t modulus)
 {
@@ -103,7 +103,7 @@ static uint64_t CKKSGetUniformMod(uint64_t modulus)
 }
 
 /**
- * @brief 生成一个中心三元随机数 {-1, 0, 1}
+ * @brief Generate a centered ternary random number {-1, 0, 1}
  */
 static int64_t CKKSGetCenteredTernary(void)
 {
@@ -115,7 +115,7 @@ static int64_t CKKSGetCenteredTernary(void)
 }
 
 /**
- * @brief 生成 (0.0, 1.0] 范围内的均匀随机浮点数
+ * @brief Generate uniform random floating-point number in range (0.0, 1.0]
  */
 static double CKKSGetUnitDouble(void)
 {
@@ -123,7 +123,7 @@ static double CKKSGetUnitDouble(void)
 }
 
 /**
- * @brief 高斯采样 (Box-Muller)
+ * @brief Gaussian sampling (Box-Muller)
  */
 static double CKKSSampleGaussian(double sigma)
 {
@@ -142,7 +142,7 @@ static double CKKSSampleGaussian(double sigma)
 }
 
 /**
- * @brief 离散高斯采样
+ * @brief Discrete Gaussian sampling
  */
 static int64_t CKKSSampleDiscreteGaussian(double sigma)
 {
@@ -522,7 +522,7 @@ cleanup:
 int CKKSEncrypt(const CKKSKeyPair *keyPair, const CKKSPolynomial *plaintext,
                        CKKSCiphertext *ciphertext)
 {
-    // 移除了 prng 参数检查
+    // Removed prng parameter check
     if (keyPair == NULL || plaintext == NULL || ciphertext == NULL) {
         return -1;
     }

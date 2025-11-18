@@ -1,15 +1,16 @@
 /*
- * CKKS 同态加密系统性能测试套件
+ * CKKS Homomorphic Encryption System Performance Test Suite
  * 
- * 本文件包含所有性能基准测试代码，用于评估 CKKS 实现的各项操作性能
+ * This file contains all performance benchmark code for evaluating the performance
+ * of various operations in the CKKS implementation
  * 
- * 测试项目包括：
- * 1. 多项式运算性能（加法、减法、乘法、除法）
- * 2. 编码/解码性能
- * 3. 加密/解密性能
- * 4. 同态运算性能（密文加法、减法、乘法）
+ * Test items include:
+ * 1. Polynomial operation performance (addition, subtraction, multiplication, division)
+ * 2. Encode/decode performance
+ * 3. Encryption/decryption performance
+ * 4. Homomorphic operation performance (ciphertext addition, subtraction, multiplication)
  * 
- * 支持多种数据规模测试，便于评估不同维度下的性能表现
+ * Supports multiple data scale tests for evaluating performance at different dimensions
  */
 
 #include <assert.h>
@@ -24,8 +25,8 @@
 #include "ckks_crypto.h"
 
 /**
- * 获取当前时间（秒）
- * 使用 CLOCK_MONOTONIC 保证单调递增，适合性能测试
+ * Get current time in seconds
+ * Uses CLOCK_MONOTONIC to ensure monotonic increase, suitable for performance testing
  */
 static double get_time_in_seconds(void) {
     struct timespec ts;
@@ -34,15 +35,15 @@ static double get_time_in_seconds(void) {
 }
 
 /**
- * 打印性能统计信息
- * @param operation 操作名称
- * @param time_seconds 执行时间（秒）
- * @param iterations 迭代次数
+ * Print performance statistics
+ * @param operation Operation name
+ * @param time_seconds Execution time (seconds)
+ * @param iterations Number of iterations
  */
 static void print_performance(const char *operation, double time_seconds, size_t iterations) {
-    printf("⏱️  %s: %.6f 秒", operation, time_seconds);
+    printf("%s: %.6f seconds", operation, time_seconds);
     if (iterations > 1) {
-        printf(" (%.2f 次/秒, 平均 %.6f 秒/次)\n", 
+        printf(" (%.2f ops/sec, avg %.6f sec/op)\n", 
                iterations / time_seconds, time_seconds / iterations);
     } else {
         printf("\n");
@@ -50,13 +51,13 @@ static void print_performance(const char *operation, double time_seconds, size_t
 }
 
 /* ============================================
- * 多项式运算性能测试
+ * Polynomial Operation Performance Tests
  * ============================================ */
 
 int test_polynomial_benchmark(size_t degree) {
     double start_time, end_time;
 
-    const uint64_t modulus = 65537; /* 16位费马素数 */
+    const uint64_t modulus = 65537; /* 16-bit Fermat prime */
 
     CKKSPolynomial a;
     CKKSPolynomial b;
@@ -75,7 +76,7 @@ int test_polynomial_benchmark(size_t degree) {
     assert(coeffsA != NULL && coeffsB != NULL && expectedAdd != NULL && expectedSub != NULL && 
            expectedMul != NULL && expectedDiv != NULL);
 
-    // 初始化测试数据
+    // Initialize test data
     for (size_t i = 0; i < degree; ++i) {
         uint64_t ai = (17ULL * (uint64_t)i + 19ULL) % modulus;
         uint64_t bi = (23ULL * (uint64_t)(i + 1ULL) * (uint64_t)(i + 1ULL) + 29ULL) % modulus;
@@ -100,7 +101,7 @@ int test_polynomial_benchmark(size_t degree) {
         expectedDiv[i] = CKKSPolynomialMulMod(coeffsA[i], inverseThree, modulus);
     }
 
-    /* 多项式加法性能测试 */
+    /* Polynomial addition performance test */
     const size_t add_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < add_iterations; i++) {
@@ -108,10 +109,10 @@ int test_polynomial_benchmark(size_t degree) {
     }
     end_time = get_time_in_seconds();
     assert(CKKSMatchCoefficients(&result, expectedAdd) == 1);
-    printf("✅ CKKS 多项式加法测试通过 (维度 %zu)\n", degree);
-    print_performance("多项式加法", end_time - start_time, add_iterations);
+    printf("CKKS polynomial addition test passed (degree %zu)\n", degree);
+    print_performance("Polynomial addition", end_time - start_time, add_iterations);
 
-    /* 多项式减法性能测试 */
+    /* Polynomial subtraction performance test */
     const size_t sub_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < sub_iterations; i++) {
@@ -119,10 +120,10 @@ int test_polynomial_benchmark(size_t degree) {
     }
     end_time = get_time_in_seconds();
     assert(CKKSMatchCoefficients(&result, expectedSub) == 1);
-    printf("✅ CKKS 多项式减法测试通过 (维度 %zu)\n", degree);
-    print_performance("多项式减法", end_time - start_time, sub_iterations);
+    printf("CKKS polynomial subtraction test passed (degree %zu)\n", degree);
+    print_performance("Polynomial subtraction", end_time - start_time, sub_iterations);
 
-    /* 多项式乘法性能测试 */
+    /* Polynomial multiplication performance test */
     const size_t mul_iterations = 1000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < mul_iterations; i++) {
@@ -130,10 +131,10 @@ int test_polynomial_benchmark(size_t degree) {
     }
     end_time = get_time_in_seconds();
     assert(CKKSMatchCoefficients(&result, expectedMul) == 1);
-    printf("✅ CKKS 多项式乘法测试通过 (维度 %zu)\n", degree);
-    print_performance("多项式乘法", end_time - start_time, mul_iterations);
+    printf("CKKS polynomial multiplication test passed (degree %zu)\n", degree);
+    print_performance("Polynomial multiplication", end_time - start_time, mul_iterations);
 
-    /* 多项式标量除法性能测试 */
+    /* Polynomial scalar division performance test */
     const size_t div_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < div_iterations; i++) {
@@ -141,10 +142,10 @@ int test_polynomial_benchmark(size_t degree) {
     }
     end_time = get_time_in_seconds();
     assert(CKKSMatchCoefficients(&result, expectedDiv) == 1);
-    printf("✅ CKKS 多项式标量除法测试通过 (维度 %zu)\n", degree);
-    print_performance("多项式标量除法", end_time - start_time, div_iterations);
+    printf("CKKS polynomial scalar division test passed (degree %zu)\n", degree);
+    print_performance("Polynomial scalar division", end_time - start_time, div_iterations);
 
-    // 清理资源
+    // Clean up resources
     free(coeffsA);
     free(coeffsB);
     free(expectedAdd);
@@ -160,7 +161,7 @@ int test_polynomial_benchmark(size_t degree) {
 }
 
 /* ============================================
- * 编码/解码性能测试
+ * Encode/Decode Performance Tests
  * ============================================ */
 
 int test_encode_decode_benchmark(size_t degree) {
@@ -179,14 +180,14 @@ int test_encode_decode_benchmark(size_t degree) {
 
     CKKSCopyFloatsToComplexSlots(plaintextSamples, plaintextCount, slots, slotCapacity);
 
-    /* 编码性能测试：复数槽到多项式 */
+    /* Encoding performance test: complex slots to polynomial */
     const size_t encode_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < encode_iterations; i++) {
         CKKSEncodeComplexSlotsToPolynomial(slots, plaintextCount, degree, scalingFactor, modulus, encodedCoeffs);
     }
     end_time = get_time_in_seconds();
-    print_performance("编码 (复数槽→多项式)", end_time - start_time, encode_iterations);
+    print_performance("Encoding (complex slots→polynomial)", end_time - start_time, encode_iterations);
 
     CKKSPolynomial encodedPoly;
     assert(CKKSPolynomialInit(&encodedPoly, degree, modulus) == 0);
@@ -196,7 +197,7 @@ int test_encode_decode_benchmark(size_t degree) {
     double *recoveredFloats = (double *)calloc(plaintextCount, sizeof(double));
     assert(decodedSlots != NULL && recoveredFloats != NULL);
 
-    /* 解码性能测试：多项式到复数槽 */
+    /* Decoding performance test: polynomial to complex slots */
     const size_t decode_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < decode_iterations; i++) {
@@ -204,20 +205,20 @@ int test_encode_decode_benchmark(size_t degree) {
                                       decodedSlots, plaintextCount);
     }
     end_time = get_time_in_seconds();
-    print_performance("解码 (多项式→复数槽)", end_time - start_time, decode_iterations);
+    print_performance("Decoding (polynomial→complex slots)", end_time - start_time, decode_iterations);
 
-    /* 直接解码性能测试：多项式到浮点数 */
+    /* Direct decoding performance test: polynomial to floating-point */
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < decode_iterations; i++) {
         CKKSDecodePolynomialToFloats(encodedPoly.coeffs, degree, scalingFactor, modulus, 
                                      recoveredFloats, plaintextCount);
     }
     end_time = get_time_in_seconds();
-    print_performance("解码 (多项式→浮点数)", end_time - start_time, decode_iterations);
+    print_performance("Decoding (polynomial→floating-point)", end_time - start_time, decode_iterations);
 
-    printf("✅ 编码/解码性能测试完成\n");
+    printf("Encode/decode performance test completed\n");
 
-    // 清理资源
+    // Clean up resources
     free(decodedSlots);
     free(recoveredFloats);
     CKKSPolynomialFree(&encodedPoly);
@@ -228,7 +229,7 @@ int test_encode_decode_benchmark(size_t degree) {
 }
 
 /* ============================================
- * 加密/解密性能测试
+ * Encryption/Decryption Performance Tests
  * ============================================ */
 
 int test_encryption_benchmark(size_t degree) {
@@ -239,27 +240,27 @@ int test_encryption_benchmark(size_t degree) {
 
     CKKSKeyPair keyPair;
     if (CKKSKeyPairInit(&keyPair, degree, modulus) != 0) {
-        fprintf(stderr, "密钥对初始化失败。\n");
+        fprintf(stderr, "Key pair initialization failed.\n");
         return 1;
     }
 
-    /* 密钥生成性能测试 */
+    /* Key generation performance test */
     start_time = get_time_in_seconds();
     if (CKKSKeyGen(&keyPair) != 0) {
-        fprintf(stderr, "密钥生成失败。\n");
+        fprintf(stderr, "Key generation failed.\n");
         CKKSKeyPairFree(&keyPair);
         return 1;
     }
     end_time = get_time_in_seconds();
-    printf("✅ CKKS 密钥生成完成 (维度 %zu)\n", degree);
-    print_performance("密钥生成", end_time - start_time, 1);
+    printf("CKKS key generation completed (degree %zu)\n", degree);
+    print_performance("Key generation", end_time - start_time, 1);
 
     const double plaintextValues[] = {1.125, -0.75, 3.5, 0.25, -1.0, 2.75, -3.125, 0.875};
     const size_t plaintextCount = sizeof(plaintextValues) / sizeof(plaintextValues[0]);
 
     CKKSPolynomial plaintext;
     if (CKKSPolynomialInit(&plaintext, degree, modulus) != 0) {
-        fprintf(stderr, "明文多项式初始化失败。\n");
+        fprintf(stderr, "Plaintext polynomial initialization failed.\n");
         CKKSKeyPairFree(&keyPair);
         return 1;
     }
@@ -269,18 +270,18 @@ int test_encryption_benchmark(size_t degree) {
 
     CKKSCiphertext ciphertext;
     if (CKKSCiphertextInit(&ciphertext, degree, modulus) != 0) {
-        fprintf(stderr, "密文初始化失败。\n");
+        fprintf(stderr, "Ciphertext initialization failed.\n");
         CKKSPolynomialFree(&plaintext);
         CKKSKeyPairFree(&keyPair);
         return 1;
     }
 
-    /* 加密性能测试 */
+    /* Encryption performance test */
     const size_t encrypt_iterations = 1000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < encrypt_iterations; i++) {
         if (CKKSEncrypt(&keyPair, &plaintext, &ciphertext) != 0) {
-            fprintf(stderr, "加密失败。\n");
+            fprintf(stderr, "Encryption failed.\n");
             CKKSCiphertextFree(&ciphertext);
             CKKSPolynomialFree(&plaintext);
             CKKSKeyPairFree(&keyPair);
@@ -288,24 +289,24 @@ int test_encryption_benchmark(size_t degree) {
         }
     }
     end_time = get_time_in_seconds();
-    printf("✅ 加密操作完成\n");
-    print_performance("加密操作", end_time - start_time, encrypt_iterations);
+    printf("Encryption operation completed\n");
+    print_performance("Encryption operation", end_time - start_time, encrypt_iterations);
 
     CKKSPolynomial decrypted;
     if (CKKSPolynomialInit(&decrypted, degree, modulus) != 0) {
-        fprintf(stderr, "解密多项式初始化失败。\n");
+        fprintf(stderr, "Decrypted polynomial initialization failed.\n");
         CKKSCiphertextFree(&ciphertext);
         CKKSPolynomialFree(&plaintext);
         CKKSKeyPairFree(&keyPair);
         return 1;
     }
 
-    /* 解密性能测试 */
+    /* Decryption performance test */
     const size_t decrypt_iterations = 1000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < decrypt_iterations; i++) {
         if (CKKSDecrypt(&keyPair, &ciphertext, &decrypted) != 0) {
-            fprintf(stderr, "解密失败。\n");
+            fprintf(stderr, "Decryption failed.\n");
             CKKSPolynomialFree(&decrypted);
             CKKSCiphertextFree(&ciphertext);
             CKKSPolynomialFree(&plaintext);
@@ -314,10 +315,10 @@ int test_encryption_benchmark(size_t degree) {
         }
     }
     end_time = get_time_in_seconds();
-    printf("✅ 解密操作完成\n");
-    print_performance("解密操作", end_time - start_time, decrypt_iterations);
+    printf("Decryption operation completed\n");
+    print_performance("Decryption operation", end_time - start_time, decrypt_iterations);
 
-    // 清理资源
+    // Clean up resources
     CKKSPolynomialFree(&decrypted);
     CKKSCiphertextFree(&ciphertext);
     CKKSPolynomialFree(&plaintext);
@@ -327,7 +328,7 @@ int test_encryption_benchmark(size_t degree) {
 }
 
 /* ============================================
- * 同态运算性能测试
+ * Homomorphic Operation Performance Tests
  * ============================================ */
 
 int test_homomorphic_ops_benchmark(size_t degree) {
@@ -338,19 +339,19 @@ int test_homomorphic_ops_benchmark(size_t degree) {
 
     CKKSKeyPair keyPair;
     if (CKKSKeyPairInit(&keyPair, degree, modulus) != 0) {
-        fprintf(stderr, "密钥对初始化失败。\n");
+        fprintf(stderr, "Key pair initialization failed.\n");
         return 1;
     }
 
     start_time = get_time_in_seconds();
     if (CKKSKeyGen(&keyPair) != 0) {
-        fprintf(stderr, "密钥生成失败。\n");
+        fprintf(stderr, "Key generation failed.\n");
         CKKSKeyPairFree(&keyPair);
         return 1;
     }
     end_time = get_time_in_seconds();
-    printf("✅ CKKS 密钥生成完成 (维度 %zu)\n", degree);
-    print_performance("密钥生成", end_time - start_time, 1);
+    printf("CKKS key generation completed (degree %zu)\n", degree);
+    print_performance("Key generation", end_time - start_time, 1);
 
     const double plaintextValuesA[] = {1.125, -0.75, 3.5, 0.25, -1.0, 2.75, -3.125, 0.875};
     const double plaintextValuesB[] = {0.5, 1.25, -2.0, 0.75, -1.5, 1.875, 2.25, -0.625};
@@ -360,7 +361,7 @@ int test_homomorphic_ops_benchmark(size_t degree) {
     CKKSPolynomial plaintextB = {0};
     if (CKKSPolynomialInit(&plaintextA, degree, modulus) != 0 ||
         CKKSPolynomialInit(&plaintextB, degree, modulus) != 0) {
-        fprintf(stderr, "明文多项式初始化失败。\n");
+        fprintf(stderr, "Plaintext polynomial initialization failed.\n");
         CKKSPolynomialFree(&plaintextA);
         CKKSPolynomialFree(&plaintextB);
         CKKSKeyPairFree(&keyPair);
@@ -376,7 +377,7 @@ int test_homomorphic_ops_benchmark(size_t degree) {
     CKKSCiphertext ciphertextB = {0};
     if (CKKSCiphertextInit(&ciphertextA, degree, modulus) != 0 ||
         CKKSCiphertextInit(&ciphertextB, degree, modulus) != 0) {
-        fprintf(stderr, "密文初始化失败。\n");
+        fprintf(stderr, "Ciphertext initialization failed.\n");
         CKKSCiphertextFree(&ciphertextA);
         CKKSCiphertextFree(&ciphertextB);
         CKKSPolynomialFree(&plaintextA);
@@ -387,7 +388,7 @@ int test_homomorphic_ops_benchmark(size_t degree) {
 
     if (CKKSEncrypt(&keyPair, &plaintextA, &ciphertextA) != 0 ||
         CKKSEncrypt(&keyPair, &plaintextB, &ciphertextB) != 0) {
-        fprintf(stderr, "加密失败。\n");
+        fprintf(stderr, "Encryption failed.\n");
         CKKSCiphertextFree(&ciphertextA);
         CKKSCiphertextFree(&ciphertextB);
         CKKSPolynomialFree(&plaintextA);
@@ -402,49 +403,49 @@ int test_homomorphic_ops_benchmark(size_t degree) {
     if (CKKSCiphertextInit(&cipherAdd, degree, modulus) != 0 ||
         CKKSCiphertextInit(&cipherSub, degree, modulus) != 0 ||
         CKKSCiphertextInit(&cipherMul, degree, modulus) != 0) {
-        fprintf(stderr, "密文运算结果初始化失败。\n");
+        fprintf(stderr, "Ciphertext operation result initialization failed.\n");
         return 1;
     }
 
-    /* 同态加法性能测试 */
+    /* Homomorphic addition performance test */
     const size_t homo_add_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < homo_add_iterations; i++) {
         if (CKKSCiphertextAdd(&ciphertextA, &ciphertextB, &cipherAdd) != 0) {
-            fprintf(stderr, "密文加法失败。\n");
+            fprintf(stderr, "Ciphertext addition failed.\n");
             return 1;
         }
     }
     end_time = get_time_in_seconds();
-    print_performance("密文同态加法", end_time - start_time, homo_add_iterations);
+    print_performance("Ciphertext homomorphic addition", end_time - start_time, homo_add_iterations);
 
-    /* 同态减法性能测试 */
+    /* Homomorphic subtraction performance test */
     const size_t homo_sub_iterations = 10000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < homo_sub_iterations; i++) {
         if (CKKSCiphertextSub(&ciphertextA, &ciphertextB, &cipherSub) != 0) {
-            fprintf(stderr, "密文减法失败。\n");
+            fprintf(stderr, "Ciphertext subtraction failed.\n");
             return 1;
         }
     }
     end_time = get_time_in_seconds();
-    print_performance("密文同态减法", end_time - start_time, homo_sub_iterations);
+    print_performance("Ciphertext homomorphic subtraction", end_time - start_time, homo_sub_iterations);
 
-    /* 同态乘法性能测试 */
+    /* Homomorphic multiplication performance test */
     const size_t homo_mul_iterations = 1000;
     start_time = get_time_in_seconds();
     for (size_t i = 0; i < homo_mul_iterations; i++) {
         if (CKKSCiphertextMul(&keyPair, &ciphertextA, &ciphertextB, scalingFactor, &cipherMul) != 0) {
-            fprintf(stderr, "密文乘法失败。\n");
+            fprintf(stderr, "Ciphertext multiplication failed.\n");
             return 1;
         }
     }
     end_time = get_time_in_seconds();
-    print_performance("密文同态乘法", end_time - start_time, homo_mul_iterations);
+    print_performance("Ciphertext homomorphic multiplication", end_time - start_time, homo_mul_iterations);
 
-    printf("✅ 同态运算性能测试完成\n");
+    printf("Homomorphic operation performance test completed\n");
 
-    // 清理资源
+    // Clean up resources
     CKKSCiphertextFree(&cipherAdd);
     CKKSCiphertextFree(&cipherSub);
     CKKSCiphertextFree(&cipherMul);
@@ -458,58 +459,58 @@ int test_homomorphic_ops_benchmark(size_t degree) {
 }
 
 /* ============================================
- * 主程序入口
+ * Main Program Entry
  * ============================================ */
 
 int main(void) {
     printf("\n");
     printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║          CKKS 同态加密系统性能测试套件                    ║\n");
+    printf("║          CKKS Homomorphic Encryption Performance Suite      ║\n");
     printf("╠════════════════════════════════════════════════════════════╣\n");
-    printf("║  测试项目：多项式运算、编码/解码、加密/解密、同态运算    ║\n");
-    printf("║  多规模测试：512, 1024, 2048, 4096 维度                  ║\n");
+    printf("║  Test Items: Polynomial ops, Encode/Decode, Encrypt/Decrypt, Homomorphic ops ║\n");
+    printf("║  Multi-scale tests: 512, 1024, 2048, 4096 dimensions      ║\n");
     printf("╚════════════════════════════════════════════════════════════╝\n");
 
-    /* 定义测试的多项式维度 */
+    /* Define polynomial degrees for testing */
     const size_t test_degrees[] = {512, 1024, 2048, 4096};
     const size_t num_degrees = sizeof(test_degrees) / sizeof(test_degrees[0]);
 
     double total_start = get_time_in_seconds();
     int all_passed = 1;
 
-    /* 对每个维度运行完整测试 */
+    /* Run complete tests for each degree */
     for (size_t d = 0; d < num_degrees; d++) {
         size_t degree = test_degrees[d];
         
         printf("\n");
         printf("╔════════════════════════════════════════════════════════════╗\n");
-        printf("║                维度 N = %-6zu 的性能测试                ║\n", degree);
+        printf("║                Performance Test for Degree N = %-6zu        ║\n", degree);
         printf("╚════════════════════════════════════════════════════════════╝\n");
 
-        printf("\n[测试 1/4] 多项式运算性能测试 (N=%zu)...\n", degree);
+        printf("\n[Test 1/4] Polynomial operation performance test (N=%zu)...\n", degree);
         int result1 = test_polynomial_benchmark(degree);
 
-        printf("\n[测试 2/4] 编码/解码性能测试 (N=%zu)...\n", degree);
+        printf("\n[Test 2/4] Encode/decode performance test (N=%zu)...\n", degree);
         int result2 = test_encode_decode_benchmark(degree);
 
-        printf("\n[测试 3/4] 加密/解密性能测试 (N=%zu)...\n", degree);
+        printf("\n[Test 3/4] Encryption/decryption performance test (N=%zu)...\n", degree);
         int result3 = test_encryption_benchmark(degree);
 
-        printf("\n[测试 4/4] 同态运算性能测试 (N=%zu)...\n", degree);
+        printf("\n[Test 4/4] Homomorphic operation performance test (N=%zu)...\n", degree);
         int result4 = test_homomorphic_ops_benchmark(degree);
 
         printf("\n");
         printf("╔════════════════════════════════════════════════════════════╗\n");
-        printf("║              N=%-6zu 测试结果总结                       ║\n", degree);
+        printf("║              Test Result Summary for N=%-6zu            ║\n", degree);
         printf("╠════════════════════════════════════════════════════════════╣\n");
-        printf("║  多项式运算测试:     %s                              ║\n",
-               result1 == 0 ? "✅ 通过" : "❌ 失败");
-        printf("║  编码/解码测试:      %s                              ║\n",
-               result2 == 0 ? "✅ 通过" : "❌ 失败");
-        printf("║  加密/解密测试:      %s                              ║\n",
-               result3 == 0 ? "✅ 通过" : "❌ 失败");
-        printf("║  同态运算测试:       %s                              ║\n",
-               result4 == 0 ? "✅ 通过" : "❌ 失败");
+        printf("║  Polynomial operation test:     %s                              ║\n",
+               result1 == 0 ? "Passed" : "Failed");
+        printf("║  Encode/decode test:            %s                              ║\n",
+               result2 == 0 ? "Passed" : "Failed");
+        printf("║  Encryption/decryption test:    %s                              ║\n",
+               result3 == 0 ? "Passed" : "Failed");
+        printf("║  Homomorphic operation test:    %s                              ║\n",
+               result4 == 0 ? "Passed" : "Failed");
         printf("╚════════════════════════════════════════════════════════════╝\n");
 
         if (result1 != 0 || result2 != 0 || result3 != 0 || result4 != 0) {
@@ -521,12 +522,12 @@ int main(void) {
 
     printf("\n");
     printf("╔════════════════════════════════════════════════════════════╗\n");
-    printf("║                  全部测试总结                              ║\n");
+    printf("║                  Overall Test Summary                      ║\n");
     printf("╠════════════════════════════════════════════════════════════╣\n");
-    printf("║  测试维度数量:       %zu 个                                ║\n", num_degrees);
-    printf("║  总体结果:           %s                              ║\n",
-           all_passed ? "✅ 全部通过" : "❌ 部分失败");
-    printf("║  总执行时间:         %.6f 秒                       ║\n",
+    printf("║  Number of test degrees:  %zu                             ║\n", num_degrees);
+    printf("║  Overall result:           %s                              ║\n",
+           all_passed ? "All passed" : "Some failed");
+    printf("║  Total execution time:     %.6f seconds                   ║\n",
            total_end - total_start);
     printf("╚════════════════════════════════════════════════════════════╝\n");
     printf("\n");

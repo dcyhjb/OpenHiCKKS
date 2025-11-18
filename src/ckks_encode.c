@@ -68,24 +68,19 @@ void CKKSEncodeFloatsToPolynomial(const double *input, size_t inputCount,
         return;
     }
 
-    // 计算可用的复数槽数量
     size_t slotCapacity = degree / 2;
     size_t slotCount = (inputCount > slotCapacity) ? slotCapacity : inputCount;
     
-    // 分配复数槽数组
     CKKSComplex *slots = (CKKSComplex *)malloc(slotCapacity * sizeof(CKKSComplex));
     if (slots == NULL) {
-        return; // 内存分配失败
+        return;
     }
     
-    // 第一步：将浮点数复制到复数槽
     CKKSCopyFloatsToComplexSlots(input, inputCount, slots, slotCapacity);
     
-    // 第二步：将复数槽编码为多项式
     CKKSEncodeComplexSlotsToPolynomial(slots, slotCapacity, degree, 
                                       scalingFactor, modulus, coeffsOut);
     
-    // 清理内存
     free(slots);
 }
 

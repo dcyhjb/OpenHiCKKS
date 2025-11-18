@@ -30,7 +30,7 @@
 # )
 
 
-# # # 多项式测试程序
+# # # Polynomial test program
 # # add_executable(test_ckks_poly 
 # #     test/ckks_poly_test.c
 # #     test/test_ckks_poly_main.c
@@ -41,10 +41,10 @@
 # # )
 # # target_link_libraries(test_ckks_poly ckks)
 
-# # 多项式测试程序 - 明确指定所有源文件
+# # Polynomial test program - explicitly specify all source files
 # add_executable(test_ckks_poly 
-#     test/test_ckks_poly_main.c # 主函数
-#     test/ckks_poly_test.c      # 测试实现
+#     test/test_ckks_poly_main.c # Main function
+#     test/ckks_poly_test.c      # Test implementation
 # )
 # target_include_directories(test_ckks_poly PUBLIC 
 #     ${CMAKE_CURRENT_SOURCE_DIR}/src
@@ -64,12 +64,12 @@ project(CKKS VERSION 1.0.0 LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
-# 打印调试信息
+# Print debug information
 message(STATUS "Current source dir: ${CMAKE_CURRENT_SOURCE_DIR}")
 
 
 
-# CKKS核心库源文件
+# CKKS core library source files
 file(GLOB CKKS_SOURCES "src/*.c")
 message(STATUS "CKKS sources: ${CKKS_SOURCES}")
 
@@ -97,7 +97,7 @@ target_link_libraries(ckks_crypto ckks_polynomial ckks_encode)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-#本地openhitls构建的路径/usr/local
+# Local openhitls build path /usr/local
 include_directories(SYSTEM /usr/local/include)
 # include_directories(SYSTEM /usr/local/include/hitls)
 
@@ -107,7 +107,7 @@ add_executable(test_main test/test_main.c)
 
 target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode m)
 
-# 性能基准测试程序 - 评估 CKKS 各项操作的性能指标
+# Performance benchmark test program - evaluates performance metrics of CKKS operations
 add_executable(test_benchmark test/test_benchmark.c)
 target_link_libraries(test_benchmark ckks_crypto ckks_polynomial ckks_encode m)
 
@@ -124,7 +124,7 @@ target_link_libraries(test_benchmark
     boundscheck
 )
 
-#代码现在依赖 hitls_crypto 和 hitls_bsl，要将这些库链接到测试程序中。
+# Code now depends on hitls_crypto and hitls_bsl, these libraries need to be linked to the test programs.
 
 # include_directories(/usr/local/include /usr/local/include/hitls /usr/local/include/hitls/bsl /usr/local/include/hitls/crypto /usr/local/include/hitls/pki /usr/local/include/hitls/tls)
 # # Modern approach: target-specific include and link directories
@@ -150,5 +150,5 @@ target_link_libraries(test_benchmark
 
 
 # link_libraries(ckks)
-# add_executable(test_main test/test_main.c) # 占位符目标，防止空项目错误
+# add_executable(test_main test/test_main.c) # Placeholder target to prevent empty project error
 # target_link_libraries(test_main ckks_crypto ckks_polynomial ckks_encode  m)

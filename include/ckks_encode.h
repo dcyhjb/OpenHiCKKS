@@ -59,7 +59,6 @@ void CKKSComplexSlotsToFloats(const CKKSComplex *slots, size_t slotCount, double
                                      size_t outputCount);
 
 
-// 直接将浮点数数组编码为多项式
 void CKKSEncodeFloatsToPolynomial(const double *input, size_t inputCount, 
                                   size_t degree, double scalingFactor, 
                                   uint64_t modulus, uint64_t *coeffsOut);

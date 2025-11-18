@@ -6,15 +6,15 @@
 
 /**
  * @file ckks_polynomial.h
- * @brief CKKS同态加密多项式环运算库
+ * @brief CKKS homomorphic encryption polynomial ring operations library
  * 
- * 这个库实现了CKKS同态加密方案中所需的多项式环运算，包括：
- * - 多项式加法、减法、乘法
- * - 标量运算
- * - 使用数论变换(NTT)加速的多项式乘法
- * - 模运算支持
+ * This library implements polynomial ring operations required for the CKKS homomorphic encryption scheme, including:
+ * - Polynomial addition, subtraction, and multiplication
+ * - Scalar operations
+ * - Polynomial multiplication accelerated using Number Theoretic Transform (NTT)
+ * - Modular arithmetic support
  * 
- * 所有运算在环 R = Z[X]/(X^N + 1) 上进行，其中N是2的幂次方。
+ * All operations are performed on the ring R = Z[X]/(X^N + 1), where N is a power of 2.
  */
 
 #ifdef __cplusplus
@@ -22,75 +22,75 @@ extern "C" {
 #endif
 
 /**
- * @brief CKKS多项式结构体
+ * @brief CKKS polynomial structure
  * 
- * 表示在模数modulus定义的有界域上的多项式，
- * 形式为: coeffs[0] + coeffs[1]*x + ... + coeffs[degree-1]*x^(degree-1)
+ * Represents a polynomial over a finite field defined by modulus,
+ * in the form: coeffs[0] + coeffs[1]*x + ... + coeffs[degree-1]*x^(degree-1)
  */
 typedef struct {
-    size_t degree;      /**< 多项式的度数 */
-    uint64_t modulus;   /**< 模数，定义系数所在的有限域 */
-    uint64_t *coeffs;   /**< 多项式系数数组，长度为degree */
+    size_t degree;      /**< Degree of the polynomial */
+    uint64_t modulus;   /**< Modulus defining the finite field for coefficients */
+    uint64_t *coeffs;   /**< Polynomial coefficient array of length degree */
 } CKKSPolynomial;
 
-/* ====== 内存管理函数 ====== */
+/* ====== Memory Management Functions ====== */
 
 /**
- * @brief 初始化多项式
+ * @brief Initialize polynomial
  * 
- * 分配多项式系数数组并设置初始参数。
+ * Allocate polynomial coefficient array and set initial parameters.
  * 
- * @param poly 要初始化的多项式指针
- * @param degree 多项式的度数
- * @param modulus 模数
- * @return 成功返回0，失败返回-1
+ * @param poly Pointer to the polynomial to initialize
+ * @param degree Degree of the polynomial
+ * @param modulus Modulus
+ * @return Returns 0 on success, -1 on failure
  */
  int CKKSPolynomialInit(CKKSPolynomial *poly, size_t degree, uint64_t modulus);
 
 /**
- * @brief 释放多项式资源
+ * @brief Free polynomial resources
  * 
- * 释放多项式系数数组并将结构体重置为初始状态。
+ * Free polynomial coefficient array and reset structure to initial state.
  * 
- * @param poly 要释放的多项式指针
+ * @param poly Pointer to the polynomial to free
  */
  void CKKSPolynomialFree(CKKSPolynomial *poly);
 
 /**
- * @brief 设置多项式系数
+ * @brief Set polynomial coefficients
  * 
- * 从外部数组复制系数到多项式结构中，并自动进行模约简。
+ * Copy coefficients from external array to polynomial structure, automatically performing modular reduction.
  * 
- * @param poly 目标多项式
- * @param coeffs 系数数组
- * @param count 系数数量（必须等于多项式的度数）
- * @return 成功返回0，失败返回-1
+ * @param poly Target polynomial
+ * @param coeffs Coefficient array
+ * @param count Number of coefficients (must equal polynomial degree)
+ * @return Returns 0 on success, -1 on failure
  */
 int CKKSPolynomialSet(CKKSPolynomial *poly, const uint64_t *coeffs, size_t count);
 
-/* ====== 基本算术运算 ====== */
+/* ====== Basic Arithmetic Operations ====== */
 
 /**
- * @brief 多项式加法
+ * @brief Polynomial addition
  * 
- * 计算 result = a + b，在环 R = Z[X]/(X^N + 1) 上进行。
+ * Compute result = a + b on the ring R = Z[X]/(X^N + 1).
  * 
- * @param a 第一个多项式
- * @param b 第二个多项式
- * @param result 存储结果的多项式
- * @return 成功返回0，失败返回-1
+ * @param a First polynomial
+ * @param b Second polynomial
+ * @param result Polynomial to store the result
+ * @return Returns 0 on success, -1 on failure
  */
  int CKKSAdd(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
 
 /**
- * @brief 多项式减法
+ * @brief Polynomial subtraction
  * 
- * 计算 result = a - b，在环 R = Z[X]/(X^N + 1) 上进行。
+ * Compute result = a - b on the ring R = Z[X]/(X^N + 1).
  * 
- * @param a 被减多项式
- * @param b 减数多项式
- * @param result 存储结果的多项式
- * @return 成功返回0，失败返回-1
+ * @param a Minuend polynomial
+ * @param b Subtrahend polynomial
+ * @param result Polynomial to store the result
+ * @return Returns 0 on success, -1 on failure
  */
 
 int CKKSPolynomialAddInplace(CKKSPolynomial *accumulator, const CKKSPolynomial *summand);
@@ -99,140 +99,140 @@ int CKKSPolynomialAddInplace(CKKSPolynomial *accumulator, const CKKSPolynomial *
  int  CKKSSub(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
 
 /**
- * @brief 多项式乘法（使用NTT加速）
+ * @brief Polynomial multiplication (accelerated with NTT)
  * 
- * 计算 result = a * b mod (X^degree + 1)，使用数论变换进行加速。
- * 这是CKKS方案中最复杂的运算，使用NTT将时间复杂度从O(N^2)降低到O(N log N)。
+ * Compute result = a * b mod (X^degree + 1) using Number Theoretic Transform for acceleration.
+ * This is the most complex operation in the CKKS scheme, using NTT to reduce time complexity from O(N^2) to O(N log N).
  * 
- * @param a 第一个多项式
- * @param b 第二个多项式
- * @param result 存储结果的多项式
- * @return 成功返回0，失败返回-1
+ * @param a First polynomial
+ * @param b Second polynomial
+ * @param result Polynomial to store the result
+ * @return Returns 0 on success, -1 on failure
  */
  int CKKSMul(const CKKSPolynomial *a, const CKKSPolynomial *b, CKKSPolynomial *result);
 
 /**
- * @brief 标量除法
+ * @brief Scalar division
  * 
- * 计算 result = poly / scalar，通过对每个系数乘以标量的模逆元实现。
+ * Compute result = poly / scalar by multiplying each coefficient by the modular inverse of the scalar.
  * 
- * @param poly 被除多项式
- * @param scalar 标量除数（不能为0）
- * @param result 存储结果的多项式
- * @return 成功返回0，失败返回-1（标量没有逆元或参数错误）
+ * @param poly Dividend polynomial
+ * @param scalar Scalar divisor (must not be 0)
+ * @param result Polynomial to store the result
+ * @return Returns 0 on success, -1 on failure (scalar has no inverse or parameter error)
  */
 int CKKSScalarDivide(const CKKSPolynomial *poly, uint64_t scalar, CKKSPolynomial *result);
 
-/* ====== 辅助函数 ====== */
+/* ====== Helper Functions ====== */
 
 /**
- * @brief 检查多项式系数是否匹配期望值
+ * @brief Check if polynomial coefficients match expected values
  * 
- * 用于测试和验证运算结果的正确性。
+ * Used for testing and verifying correctness of operation results.
  * 
- * @param poly 要检查的多项式
- * @param expected 期望的系数数组
- * @return 匹配返回1，不匹配返回0
+ * @param poly Polynomial to check
+ * @param expected Expected coefficient array
+ * @return Returns 1 if matched, 0 if not matched
  */
 int CKKSMatchCoefficients(const CKKSPolynomial *poly, const uint64_t *expected);
 
 /**
- * @brief 朴素多项式乘法（用于验证）
+ * @brief Naive polynomial multiplication (for verification)
  * 
- * 使用直接卷积方法计算多项式乘法，用于验证NTT实现的正确性。
- * 注意：此函数仅用于测试，性能较低。
+ * Compute polynomial multiplication using direct convolution method, used to verify correctness of NTT implementation.
+ * Note: This function is for testing only and has low performance.
  * 
- * @param a 第一个系数数组
- * @param b 第二个系数数组
- * @param degree 多项式度数
- * @param modulus 模数
- * @param result 存储结果的数组（长度至少为degree）
+ * @param a First coefficient array
+ * @param b Second coefficient array
+ * @param degree Polynomial degree
+ * @param modulus Modulus
+ * @param result Array to store result (length at least degree)
  */
 void CKKSNaiveMulReduce(const uint64_t *a, const uint64_t *b, size_t degree, 
                         uint64_t modulus, uint64_t *result);
 
-/* ====== 底层数学函数 ====== */
+/* ====== Low-level Math Functions ====== */
 
 /**
- * @brief 模约简函数（64位）
+ * @brief Modular reduction function (64-bit)
  * 
- * 将有符号64位整数约简到[0, modulus-1]范围内。
+ * Reduce signed 64-bit integer to the range [0, modulus-1].
  * 
- * @param value 要约简的值
- * @param modulus 模数
- * @return 约简后的值
+ * @param value Value to reduce
+ * @param modulus Modulus
+ * @return Reduced value
  */
  uint64_t CKKSModReduceInt64(int64_t value, uint64_t modulus);
 
 /**
- * @brief 模约简函数（128位）
+ * @brief Modular reduction function (128-bit)
  * 
- * 处理大数乘法结果的模运算，使用128位整数中间结果。
+ * Handle modular arithmetic for large number multiplication results, using 128-bit integer intermediate results.
  * 
- * @param value 要约简的值（128位）
- * @param modulus 模数
- * @return 约简后的值
+ * @param value Value to reduce (128-bit)
+ * @param modulus Modulus
+ * @return Reduced value
  */
 uint64_t CKKSModReduceInt128(__int128 value, uint64_t modulus);
 
 /**
- * @brief 模幂运算
+ * @brief Modular exponentiation
  * 
- * 使用快速幂算法计算 base^exponent mod modulus。
+ * Compute base^exponent mod modulus using fast exponentiation algorithm.
  * 
- * @param base 底数
- * @param exponent 指数
- * @param modulus 模数
- * @return 计算结果
+ * @param base Base
+ * @param exponent Exponent
+ * @param modulus Modulus
+ * @return Computation result
  */
 uint64_t CKKSPolynomialPowMod(uint64_t base, uint64_t exponent, uint64_t modulus);
 
 /**
- * @brief 模乘法
+ * @brief Modular multiplication
  * 
- * 计算 a * b mod modulus，使用128位中间结果避免溢出。
+ * Compute a * b mod modulus, using 128-bit intermediate result to avoid overflow.
  * 
- * @param a 第一个操作数
- * @param b 第二个操作数
- * @param modulus 模数
- * @return 计算结果
+ * @param a First operand
+ * @param b Second operand
+ * @param modulus Modulus
+ * @return Computation result
  */
  uint64_t CKKSPolynomialMulMod(uint64_t a, uint64_t b, uint64_t modulus);
 
 /**
- * @brief 模逆元计算
+ * @brief Modular inverse computation
  * 
- * 使用扩展欧几里得算法计算value在模modulus下的逆元。
+ * Compute the modular inverse of value modulo modulus using extended Euclidean algorithm.
  * 
- * @param value 要求逆元的值
- * @param modulus 模数
- * @return 逆元，如果不存在则返回0
+ * @param value Value for which to compute the inverse
+ * @param modulus Modulus
+ * @return Modular inverse, returns 0 if it does not exist
  */
 uint64_t CKKSPolynomialModInverse(uint64_t value, uint64_t modulus);
 
-/* ====== 数论变换函数 ====== */
+/* ====== Number Theoretic Transform Functions ====== */
 
 /**
- * @brief 数论变换 (NTT)
+ * @brief Number Theoretic Transform (NTT)
  * 
- * 将多项式从时域转换到频域，用于加速多项式乘法。
+ * Transform polynomial from time domain to frequency domain, used to accelerate polynomial multiplication.
  * 
- * @param data 输入/输出数据数组
- * @param length 数据长度（必须是2的幂次）
- * @param modulus 模数
- * @param primitiveRoot 原根
+ * @param data Input/output data array
+ * @param length Data length (must be a power of 2)
+ * @param modulus Modulus
+ * @param primitiveRoot Primitive root
  */
  void CKKSNTT(uint64_t *data, size_t length, uint64_t modulus, uint64_t primitiveRoot);
 
 /**
- * @brief 逆数论变换 (Inverse NTT)
+ * @brief Inverse Number Theoretic Transform (Inverse NTT)
  * 
- * 将多项式从频域转换回时域。
+ * Transform polynomial from frequency domain back to time domain.
  * 
- * @param data 输入/输出数据数组
- * @param length 数据长度（必须是2的幂次）
- * @param modulus 模数
- * @param primitiveRoot 原根
+ * @param data Input/output data array
+ * @param length Data length (must be a power of 2)
+ * @param modulus Modulus
+ * @param primitiveRoot Primitive root
  */
 void CKKSInverseNTT(uint64_t *data, size_t length, uint64_t modulus, uint64_t primitiveRoot);
 
